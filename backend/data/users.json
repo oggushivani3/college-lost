@@ -8,5 +8,15 @@
     "points": 0,
     "contactNumber": "",
     "createdAt": "2026-06-19T06:45:55.136Z"
+  },
+  {
+    "uid": "QRBGwyvJJdM9GRHQ4AkzcIZiDDM2",
+    "name": "Oggu Shivani",
+    "email": "oggushivani3@gmail.com",
+    "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocL0hhyNpwHSb2c23wd5qlzVoc6C6eBxs0t97Y86C6oJiVEqlw=s96-c",
+    "role": "student",
+    "points": 0,
+    "contactNumber": "",
+    "createdAt": "2026-06-19T07:08:43.717Z"
   }
 ]

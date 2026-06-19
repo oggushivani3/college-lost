@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "notif-f42087da",
+    "userId": "PYAS1jrJtvhyi3zk8PWSmUq39OE3",
+    "type": "comment",
+    "message": "Oggu Shivani commented on your reported lost item \"pouch\": \"hey its mine where can i get\"",
+    "relatedItemId": "lost-34a70dd7",
+    "read": false,
+    "createdAt": "2026-06-19T07:09:09.166Z"
+  },
+  {
+    "id": "notif-1781855462842-lost-0m5hb",
+    "userId": "QRBGwyvJJdM9GRHQ4AkzcIZiDDM2",
+    "type": "match",
+    "message": "AI Match: Sravs Oggu found a 'charger c pin' at Classroom Block which matches your lost 'charger'!",
+    "relatedItemId": "found-af617ef3",
+    "read": true,
+    "createdAt": "2026-06-19T07:51:02.842Z"
+  },
+  {
+    "id": "notif-1781855462843-found-gqesc",
+    "userId": "PYAS1jrJtvhyi3zk8PWSmUq39OE3",
+    "type": "match",
+    "message": "AI Match: Oggu Shivani lost a 'charger' which matches the 'charger c pin' you found at Classroom Block!",
+    "relatedItemId": "lost-0b650ef8",
+    "read": false,
+    "createdAt": "2026-06-19T07:51:02.843Z"
+  }
+]

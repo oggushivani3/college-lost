@@ -16,7 +16,7 @@ const LOCATIONS = [
 
 export default function ReportItem({ type = 'lost', onReportSuccess }) {
   const { user, loginWithGoogle } = useAuth();
-  const [formType, setFormType] = useState(type); // 'lost' | 'found'
+  const formType = 'lost'; // fixed to lost reporting
   
   // Form fields
   const [name, setName] = useState('');
@@ -33,9 +33,7 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
 
-  useEffect(() => {
-    setFormType(type);
-  }, [type]);
+  
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -87,22 +85,16 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
         name,
         category,
         description,
-        reporterId: user.uid,
-        imageUrl: uploadedUrl
+        reporterId: user?.uid || user?.email || 'unknown',
+        reporterEmail: user?.email || '',
+        imageUrl: uploadedUrl,
+        type: formType
       };
 
-      let endpoint = '';
-      if (formType === 'lost') {
-        endpoint = 'http://localhost:5000/api/lost-items';
+        let endpoint = 'http://localhost:5000/api/lost-items';
         payload.lastSeenLocation = location;
         payload.dateLost = date;
         payload.contactNumber = contactNumber;
-      } else {
-        endpoint = 'http://localhost:5000/api/found-items';
-        payload.locationFound = location;
-        payload.dateFound = date;
-        payload.additionalNotes = additionalNotes;
-      }
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -123,7 +115,6 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
         setLocation('');
         setDate('');
         setContactNumber('');
-        setAdditionalNotes('');
         setImageFile(null);
         setImagePreview(null);
 
@@ -149,34 +140,10 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
         animate={{ opacity: 1, y: 0 }}
         className="glass-panel p-6 md:p-8 rounded-3xl border border-white/20 dark:border-white/5 shadow-2xl"
       >
-        {/* Dual Tab Buttons */}
-        <div className="flex bg-slate-100/60 dark:bg-slate-900/60 p-1.5 rounded-2xl mb-8">
-          <button
-            onClick={() => { setFormType('lost'); setStatusMsg({ type: '', text: '' }); }}
-            className={`flex-1 py-3 text-center text-sm font-bold rounded-xl transition-all duration-200 ${
-              formType === 'lost'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-            }`}
-          >
-            Report Lost Item
-          </button>
-          <button
-            onClick={() => { setFormType('found'); setStatusMsg({ type: '', text: '' }); }}
-            className={`flex-1 py-3 text-center text-sm font-bold rounded-xl transition-all duration-200 ${
-              formType === 'found'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-            }`}
-          >
-            Report Found Item
-          </button>
-        </div>
-
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white font-heading">
-              {formType === 'lost' ? 'Lost Item Form' : 'Found Item Form'}
+              Report Lost Item
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Provide exact details to improve AI match precision.
@@ -233,9 +200,9 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
 
             {/* Location */}
             <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                {formType === 'lost' ? 'Last Seen Location *' : 'Location Found *'}
-              </label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Last Seen Location *
+                </label>
               <div className="relative">
                 <MapPin className="absolute left-4 top-3.5 text-slate-400" size={16} />
                 <select
@@ -252,9 +219,9 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
 
             {/* Date */}
             <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                {formType === 'lost' ? 'Date Lost *' : 'Date Found *'}
-              </label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Date Lost *
+                </label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-3.5 text-slate-400" size={16} />
                 <input
@@ -281,32 +248,17 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
             />
           </div>
 
-          {/* Conditional Fields based on formType */}
-          {formType === 'lost' ? (
-            /* Contact Number (Optional) */
-            <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Contact Number (Optional)</label>
-              <input
-                type="text"
-                value={contactNumber}
-                onChange={(e) => setContactNumber(e.target.value)}
-                placeholder="e.g. +1 (555) 019-2834"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-              />
-            </div>
-          ) : (
-            /* Additional Notes (Optional) */
-            <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Additional Notes / Handover Spot (Optional)</label>
-              <input
-                type="text"
-                value={additionalNotes}
-                onChange={(e) => setAdditionalNotes(e.target.value)}
-                placeholder="e.g. Handed over to Library front desk assistant."
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-              />
-            </div>
-          )}
+          {/* Contact Number (Optional) */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Contact Number (Optional)</label>
+            <input
+              type="text"
+              value={contactNumber}
+              onChange={(e) => setContactNumber(e.target.value)}
+              placeholder="e.g. +1 (555) 019-2834"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+            />
+          </div>
 
           {/* Upload Image Section */}
           <div className="space-y-2 text-left">

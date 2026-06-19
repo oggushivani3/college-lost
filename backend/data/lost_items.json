@@ -11,5 +11,18 @@
     "contactNumber": "9704442983",
     "status": "Lost",
     "createdAt": "2026-06-19T06:49:10.400Z"
+  },
+  {
+    "id": "lost-0b650ef8",
+    "reporterId": "QRBGwyvJJdM9GRHQ4AkzcIZiDDM2",
+    "name": "charger",
+    "category": "Other",
+    "description": "charger c pin white",
+    "lastSeenLocation": "Computer Lab",
+    "dateLost": "2026-06-19",
+    "imageUrl": "/uploads/image-1781855462796-588283391.jpeg",
+    "contactNumber": "9704442983",
+    "status": "Lost",
+    "createdAt": "2026-06-19T07:51:02.835Z"
   }
 ]

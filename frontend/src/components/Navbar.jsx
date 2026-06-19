@@ -50,13 +50,11 @@ export default function Navbar({ activePage, setActivePage }) {
     }
   };
 
-  const navLinks = [
-    { id: 'home', label: 'Home' },
-    { id: 'browse-lost', label: 'Browse Lost' },
-    { id: 'browse-found', label: 'Browse Found' },
-    { id: 'report-lost', label: 'Report Lost' },
-    { id: 'report-found', label: 'Report Found' },
-  ];
+    const navLinks = [
+      { id: 'home', label: 'Home' },
+      { id: 'browse-lost', label: 'Browse Lost' },
+      { id: 'report-lost', label: 'Report Lost' },
+    ];
 
   return (
     <nav className="sticky top-0 z-40 w-full glass-panel border-b border-white/20 dark:border-white/5 py-4 px-6 md:px-12 flex items-center justify-between transition-all duration-300">

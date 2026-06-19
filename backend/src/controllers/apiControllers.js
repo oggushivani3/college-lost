@@ -356,6 +356,7 @@ export const respondToClaim = async (req, res) => {
       }
 
       // 4. Notify both users
+      // 4. Notify both users
       await db.notifications.create({
         id: `notif-${Date.now()}-c`,
         userId: claim.claimantId,
@@ -375,6 +376,19 @@ export const respondToClaim = async (req, res) => {
         read: false,
         createdAt: new Date().toISOString()
       });
+
+      // 5. Notify the original lost item reporter about the successful return
+      if (lostItem && lostItem.reporterId) {
+        await db.notifications.create({
+          id: `notif-${Date.now()}-r`,
+          userId: lostItem.reporterId,
+          type: 'system',
+          message: `Your lost item '${lostItem.name}' has been returned successfully to its owner.`,
+          relatedItemId: lostItem.id,
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+      }
 
     } else {
       await db.claims.updateOne({ id }, { status: 'Rejected' });
