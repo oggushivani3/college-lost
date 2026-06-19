@@ -18,5 +18,15 @@
     "points": 0,
     "contactNumber": "",
     "createdAt": "2026-06-19T07:08:43.717Z"
+  },
+  {
+    "uid": "VXIEYDohQAXJG5uUkH4Heks36rC2",
+    "name": "Sravani Oggu",
+    "email": "oggusravani6@gmail.com",
+    "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocJifvSPH2jCepBOgH8cSMsFJSzS7xNgj6r6HULri5BrDKxeRg=s96-c",
+    "role": "student",
+    "points": 0,
+    "contactNumber": "",
+    "createdAt": "2026-06-19T09:05:30.727Z"
   }
 ]

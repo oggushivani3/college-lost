@@ -58,12 +58,6 @@ function CommentChat({ itemId, user, loginWithGoogle, reporterId, finderId }) {
 
   const handleSend = async () => {
     if (!user) { loginWithGoogle(); return; }
-    // Allow only reporter or finder to send messages
-    if (user.uid !== reporterId && user.uid !== finderId) {
-      setSending(false);
-      alert('Only the reporter or the finder can chat about this item.');
-      return;
-    }
     const trimmed = message.trim();
     if (!trimmed) return;
 
@@ -583,7 +577,7 @@ export default function BrowseItems() { // only lost items mode
                       : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-300'
                   }`}
                 >
-                  <MessageCircle size={13} /> Chat with Reporter
+                  <MessageCircle size={13} /> Item Chat
                 </button>
               </div>
 
