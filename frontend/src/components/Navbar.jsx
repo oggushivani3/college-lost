@@ -1,3 +1,4 @@
+import { API_URL, BASE_URL } from '../config.js';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -15,7 +16,7 @@ export default function Navbar({ activePage, setActivePage }) {
     if (!user) return;
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/notifications/${user.uid}`);
+        const res = await fetch(`${API_URL}/notifications/${user.uid}`);
         if (res.ok) {
           const data = await res.json();
           setNotifications(data);
@@ -41,7 +42,7 @@ export default function Navbar({ activePage, setActivePage }) {
     try {
       const promises = notifications
         .filter(n => !n.read)
-        .map(n => fetch(`http://localhost:5000/api/notifications/${n.id}/read`, { method: 'POST' }));
+        .map(n => fetch(`${API_URL}/notifications/${n.id}/read`, { method: 'POST' }));
       await Promise.all(promises);
       // Refresh notifications locally
       setNotifications(notifications.map(n => ({ ...n, read: true })));

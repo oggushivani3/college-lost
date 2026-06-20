@@ -1,3 +1,4 @@
+import { API_URL, BASE_URL } from '../config.js';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -24,13 +25,13 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${user.uid}/dashboard`);
+      const res = await fetch(`${API_URL}/users/${user.uid}/dashboard`);
       if (res.ok) {
         const data = await res.json();
         setDashboardData(data);
       }
 
-      const notifRes = await fetch(`http://localhost:5000/api/notifications/${user.uid}`);
+      const notifRes = await fetch(`${API_URL}/notifications/${user.uid}`);
       if (notifRes.ok) {
         const notifData = await notifRes.json();
         setNotifications(notifData);
@@ -50,7 +51,7 @@ export default function Dashboard() {
   const handleClaimResponse = async (claimId, response) => {
     setActionMsg({ id: claimId, type: 'info', text: 'Processing...' });
     try {
-      const res = await fetch(`http://localhost:5000/api/claims/${claimId}/respond`, {
+      const res = await fetch(`${API_URL}/claims/${claimId}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ response })
@@ -76,7 +77,7 @@ export default function Dashboard() {
 
   const markRead = async (notifId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/notifications/${notifId}/read`, { method: 'POST' });
+      const res = await fetch(`${API_URL}/notifications/${notifId}/read`, { method: 'POST' });
       if (res.ok) {
         setNotifications(notifications.map(n => n.id === notifId ? { ...n, read: true } : n));
       }
@@ -205,7 +206,7 @@ export default function Dashboard() {
                     dashboardData.myLost.map(item => (
                       <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4">
                         <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
-                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:5000${item.imageUrl}`} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
+                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">{item.name}</h4>
@@ -238,7 +239,7 @@ export default function Dashboard() {
                     dashboardData.myFound.map(item => (
                       <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4">
                         <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
-                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:5000${item.imageUrl}`} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
+                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">{item.name}</h4>

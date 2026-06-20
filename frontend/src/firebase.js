@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,6 +14,8 @@ const firebaseConfig = {
 
 let auth = null;
 let googleProvider = null;
+let db = null;
+let storage = null;
 
 const hasFirebaseKeys = 
   import.meta.env.VITE_FIREBASE_API_KEY && 
@@ -23,9 +27,11 @@ if (hasFirebaseKeys) {
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
+    db = getFirestore(app);
+    storage = getStorage(app);
   } catch (error) {
     console.error('Firebase initialization failed:', error);
   }
 }
 
-export { auth, googleProvider };
+export { auth, googleProvider, db, storage };

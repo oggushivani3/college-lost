@@ -6,13 +6,13 @@ import { fileURLToPath } from 'url';
 import apiRoutes from './routes/apiRoutes.js';
 import { connectDB } from './config/db.js';
 
-dotenv.config();
-
-// Connect to Database (MongoDB or JSON fallback)
-connectDB();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load .env from backend root (one level up from src/)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Also try project root .env as fallback
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,13 +34,21 @@ app.use('/api', apiRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date() });
+  res.json({ status: 'ok', time: new Date(), db: 'MongoDB Atlas' });
 });
 
-app.listen(PORT, () => {
-  console.log(`===============================================`);
-  console.log(`  College Lost & Found API Server Running      `);
-  console.log(`  Port: ${PORT}                                `);
-  console.log(`  Endpoint: http://localhost:${PORT}          `);
-  console.log(`===============================================`);
-});
+// Connect to DB then start server
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`===============================================`);
+    console.log(`  College Lost & Found API Server Running      `);
+    console.log(`  Port: ${PORT}                                `);
+    console.log(`  Endpoint: http://localhost:${PORT}          `);
+    console.log(`  Database: MongoDB Atlas                      `);
+    console.log(`===============================================`);
+  });
+};
+
+startServer();

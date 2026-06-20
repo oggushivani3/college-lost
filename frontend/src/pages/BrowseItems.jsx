@@ -6,6 +6,11 @@ import {
   Tag, Compass, Phone, User, QrCode, ClipboardList, Info, X, Check, Eye,
   MessageCircle, Send, Loader2
 } from 'lucide-react';
+import {
+  getLostItems, getFoundItems, updateLostItem, addClaim,
+  addNotification, generateQRCode,
+  getComments, addComment, subscribeComments
+} from '../firestoreService';
 
 const CATEGORIES = [
   'ID Card', 'Mobile Phone', 'Wallet', 'Keys', 'Earbuds', 
@@ -25,30 +30,21 @@ function CommentChat({ itemId, user, loginWithGoogle, reporterId, finderId }) {
   const [sending, setSending]     = useState(false);
   const [loadingComments, setLoadingComments] = useState(true);
   const bottomRef = useRef(null);
-  const pollRef   = useRef(null);
-
-  const fetchComments = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/items/${itemId}/comments`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(data);
-      }
-    } catch (err) {
-      console.error('Failed to load comments:', err);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
+  const unsubRef  = useRef(null);
 
   useEffect(() => {
     setLoadingComments(true);
     setComments([]);
-    fetchComments();
 
-    // Poll for new messages every 10 seconds
-    pollRef.current = setInterval(fetchComments, 10000);
-    return () => clearInterval(pollRef.current);
+    // Use real-time listener for comments
+    unsubRef.current = subscribeComments(itemId, (newComments) => {
+      setComments(newComments);
+      setLoadingComments(false);
+    });
+
+    return () => {
+      if (unsubRef.current) unsubRef.current();
+    };
   }, [itemId]);
 
   // Scroll to bottom whenever comments change
@@ -63,21 +59,13 @@ function CommentChat({ itemId, user, loginWithGoogle, reporterId, finderId }) {
 
     setSending(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/items/${itemId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId:       user.uid,
-          userName:     user.name || user.email,
-          userPhotoURL: user.photoURL || '',
-          message:      trimmed
-        })
+      await addComment(itemId, {
+        userId:       user.uid,
+        userName:     user.name || user.email,
+        userPhotoURL: user.photoURL || '',
+        message:      trimmed
       });
-      if (res.ok) {
-        const newComment = await res.json();
-        setComments(prev => [...prev, newComment]);
-        setMessage('');
-      }
+      setMessage('');
     } catch (err) {
       console.error('Failed to post comment:', err);
     } finally {
@@ -192,9 +180,9 @@ function CommentChat({ itemId, user, loginWithGoogle, reporterId, finderId }) {
             <button
               onClick={handleSend}
               disabled={sending || !message.trim()}
-              className="p-2.5 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+              className="p-2.5 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
-              {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+              {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </button>
           </div>
         )}
@@ -203,20 +191,18 @@ function CommentChat({ itemId, user, loginWithGoogle, reporterId, finderId }) {
   );
 }
 
-// ── Main BrowseItems Component ────────────────────────────────────────────────
-export default function BrowseItems() { // only lost items mode
-  const mode = 'lost';
+// ── BrowseItems Main ─────────────────────────────────────────────────────────
+export default function BrowseItems({ mode = 'lost' }) {
   const { user, loginWithGoogle } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  
   // Search & Filter state
   const [search, setSearch]     = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
   const [date, setDate]         = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [viewMode, setViewMode] = useState('grid');
 
   // Details Modal state
   const [selectedItem, setSelectedItem]   = useState(null);
@@ -225,26 +211,32 @@ export default function BrowseItems() { // only lost items mode
   const [submittingClaim, setSubmittingClaim] = useState(false);
 
   // Chat panel tab inside modal
-  const [detailTab, setDetailTab] = useState('info'); // 'info' | 'chat'
+  const [detailTab, setDetailTab] = useState('info');
 
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams();
-      if (search)   queryParams.append('search', search);
-      if (category) queryParams.append('category', category);
-      if (location) queryParams.append('location', location);
-      if (date)     queryParams.append('date', date);
+      const filters = {};
+      if (search)   filters.search = search;
+      if (category) filters.category = category;
 
-      const endpoint = mode === 'lost' 
-        ? `http://localhost:5000/api/lost-items?${queryParams.toString()}`
-        : `http://localhost:5000/api/found-items?${queryParams.toString()}`;
+      const data = mode === 'lost'
+        ? await getLostItems(filters)
+        : await getFoundItems(filters);
 
-      const res = await fetch(endpoint);
-      if (res.ok) {
-        const data = await res.json();
-        setItems(data);
+      // Client-side location and date filters
+      let filtered = data;
+      if (location) {
+        filtered = filtered.filter(i =>
+          (mode === 'lost' ? i.lastSeenLocation : i.locationFound) === location
+        );
       }
+      if (date) {
+        filtered = filtered.filter(i =>
+          (mode === 'lost' ? i.dateLost : i.dateFound) === date
+        );
+      }
+      setItems(filtered);
     } catch (err) {
       console.error(err);
     } finally {
@@ -263,13 +255,10 @@ export default function BrowseItems() { // only lost items mode
     setDetailTab('info');
     setQrCodeUrl('');
     try {
-      const res = await fetch(`http://localhost:5000/api/items/qr/${item.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setQrCodeUrl(data.qrCodeUrl);
-      }
+      const url = await generateQRCode(item.id);
+      setQrCodeUrl(url);
     } catch (err) {
-      console.error('QR code fetch failed:', err);
+      console.error('QR code generation failed:', err);
     }
   };
 
@@ -289,31 +278,32 @@ export default function BrowseItems() { // only lost items mode
     setClaimStatus({ type: '', text: '' });
 
     try {
-      const res = await fetch('http://localhost:5000/api/claims', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lostItemId: '',
-          foundItemId: selectedItem.id,
-          claimantId: user.uid,
-          finderId: selectedItem.reporterId
-        })
+      await addClaim({
+        lostItemId: '',
+        foundItemId: selectedItem.id,
+        itemName: selectedItem.name,
+        claimantId: user.uid,
+        claimantName: user.name || user.email,
+        finderId: selectedItem.reporterId
       });
 
-      if (res.ok) {
-        setClaimStatus({ 
-          type: 'success', 
-          text: 'Claim request submitted! The finder has been notified on their dashboard.' 
-        });
-        fetchItems();
-        setSelectedItem({ ...selectedItem, status: 'Claimed' });
-      } else {
-        const errData = await res.json();
-        setClaimStatus({ type: 'error', text: errData.error || 'Failed to submit claim.' });
-      }
+      // Send notification to the finder
+      await addNotification({
+        userId: selectedItem.reporterId,
+        type: 'new_claim',
+        message: `${user.name || user.email} has claimed "${selectedItem.name}".`,
+        itemId: selectedItem.id
+      });
+
+      setClaimStatus({ 
+        type: 'success', 
+        text: 'Claim request submitted! The finder has been notified on their dashboard.' 
+      });
+      fetchItems();
+      setSelectedItem({ ...selectedItem, status: 'Claimed' });
     } catch (err) {
       console.error(err);
-      setClaimStatus({ type: 'error', text: 'Server connection error.' });
+      setClaimStatus({ type: 'error', text: 'Failed to submit claim. Please try again.' });
     } finally {
       setSubmittingClaim(false);
     }
@@ -327,23 +317,14 @@ export default function BrowseItems() { // only lost items mode
     }
     if (!selectedItem) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/lost-items/${selectedItem.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Found', finderId: user.uid })
-      });
-      if (res.ok) {
-        const updatedItem = await res.json();
-        setSelectedItem({ ...selectedItem, status: 'Found', finderId: user.uid });
-        setDetailTab('chat');
-        fetchItems();
-      } else {
-        console.error('Failed to mark item as found');
-      }
+      await updateLostItem(selectedItem.id, { status: 'Found', finderId: user.uid });
+      setSelectedItem({ ...selectedItem, status: 'Found', finderId: user.uid });
+      setDetailTab('chat');
+      fetchItems();
     } catch (err) {
       console.error(err);
     }
-  };;
+  };
 
   const resetFilters = () => {
     setSearch('');
@@ -479,7 +460,7 @@ export default function BrowseItems() { // only lost items mode
               <div className={`${viewMode === 'grid' ? 'w-full h-48' : 'w-24 h-24 shrink-0 rounded-lg'} bg-slate-100 dark:bg-slate-800 overflow-hidden relative`}>
                 {item.imageUrl ? (
                   <img 
-                    src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:5000${item.imageUrl}`} 
+                    src={item.imageUrl} 
                     alt={item.name} 
                     className="w-full h-full object-cover" 
                   />
@@ -591,7 +572,7 @@ export default function BrowseItems() { // only lost items mode
                       <div className="w-full h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-slate-200/50 dark:border-white/5">
                         {selectedItem.imageUrl ? (
                           <img 
-                            src={selectedItem.imageUrl.startsWith('http') ? selectedItem.imageUrl : `http://localhost:5000${selectedItem.imageUrl}`} 
+                            src={selectedItem.imageUrl} 
                             alt={selectedItem.name} 
                             className="w-full h-full object-cover" 
                           />
@@ -638,7 +619,7 @@ export default function BrowseItems() { // only lost items mode
                         onClick={() => setDetailTab('chat')}
                         className="w-full py-2.5 rounded-xl border border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold flex items-center justify-center gap-2 transition-all"
                       >
-                        <MessageCircle size={14} /> Chat with Reporter
+                        <MessageCircle size={14} /> Chat about this item
                       </button>
                     </div>
 

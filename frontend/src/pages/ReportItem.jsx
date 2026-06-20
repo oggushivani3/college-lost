@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Upload, Check, AlertCircle, Sparkles, MapPin, Calendar, Tag } from 'lucide-react';
+import { addLostItem, uploadImage } from '../firestoreService';
 
 const CATEGORIES = [
   'ID Card', 'Mobile Phone', 'Wallet', 'Keys', 'Earbuds', 
@@ -33,33 +34,12 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
 
-  
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
-  };
-
-  const uploadImage = async () => {
-    if (!imageFile) return '';
-    try {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      const res = await fetch('http://localhost:5000/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.imageUrl;
-      }
-    } catch (err) {
-      console.error('Image upload failed:', err);
-    }
-    return '';
   };
 
   const handleSubmit = async (e) => {
@@ -79,55 +59,45 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
     setStatusMsg({ type: '', text: '' });
 
     try {
-      const uploadedUrl = await uploadImage();
+      // Upload image to Firebase Storage
+      const uploadedUrl = await uploadImage(imageFile);
 
       const payload = {
         name,
         category,
         description,
-        reporterId: user?.uid || user?.email || 'unknown',
-        reporterEmail: user?.email || '',
+        reporterId: user.uid,
+        reporterEmail: user.email || '',
+        reporterName: user.name || '',
         imageUrl: uploadedUrl,
-        type: formType
+        lastSeenLocation: location,
+        dateLost: date,
+        contactNumber
       };
 
-        let endpoint = 'http://localhost:5000/api/lost-items';
-        payload.lastSeenLocation = location;
-        payload.dateLost = date;
-        payload.contactNumber = contactNumber;
+      await addLostItem(payload);
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      setStatusMsg({ 
+        type: 'success', 
+        text: 'Report submitted successfully! Your item has been saved to the database.' 
       });
+      
+      // Reset form
+      setName('');
+      setCategory('');
+      setDescription('');
+      setLocation('');
+      setDate('');
+      setContactNumber('');
+      setImageFile(null);
+      setImagePreview(null);
 
-      if (res.ok) {
-        setStatusMsg({ 
-          type: 'success', 
-          text: `Report submitted successfully! AI is currently scanning for matches...` 
-        });
-        
-        // Reset form
-        setName('');
-        setCategory('');
-        setDescription('');
-        setLocation('');
-        setDate('');
-        setContactNumber('');
-        setImageFile(null);
-        setImagePreview(null);
-
-        if (onReportSuccess) {
-          setTimeout(() => onReportSuccess(formType), 2000);
-        }
-      } else {
-        const errData = await res.json();
-        setStatusMsg({ type: 'error', text: errData.error || 'Failed to submit report.' });
+      if (onReportSuccess) {
+        setTimeout(() => onReportSuccess(formType), 2000);
       }
     } catch (err) {
       console.error(err);
-      setStatusMsg({ type: 'error', text: 'Server connection error. Please try again.' });
+      setStatusMsg({ type: 'error', text: 'Failed to submit report. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -263,7 +233,7 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
           {/* Upload Image Section */}
           <div className="space-y-2 text-left">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Upload Image {formType === 'lost' ? '(Optional)' : '(Recommended)'}
+              Upload Image (Optional)
             </label>
             <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-2xl border-2 border-dashed border-slate-200/80 dark:border-white/10 bg-white/30 dark:bg-slate-900/30">
               <div className="flex flex-col items-center justify-center shrink-0 w-24 h-24 rounded-xl border border-slate-200/50 bg-white/50 dark:border-white/5 dark:bg-slate-800/50 overflow-hidden">
@@ -297,13 +267,9 @@ export default function ReportItem({ type = 'lost', onReportSuccess }) {
           <button
             type="submit"
             disabled={submitting}
-            className={`w-full py-4 text-sm font-bold text-white rounded-xl shadow-lg transition-all duration-200 hover:scale-[1.01] ${
-              formType === 'lost'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 shadow-brand-500/25'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/25'
-            }`}
+            className="w-full py-4 text-sm font-bold text-white rounded-xl shadow-lg transition-all duration-200 hover:scale-[1.01] bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 shadow-brand-500/25"
           >
-            {submitting ? 'Submitting Report...' : formType === 'lost' ? 'Submit Lost Item Report' : 'Submit Found Item Report'}
+            {submitting ? 'Submitting Report...' : 'Submit Lost Item Report'}
           </button>
         </form>
       </motion.div>

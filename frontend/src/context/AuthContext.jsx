@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
+import { upsertUser, getUser } from '../firestoreService';
 
 const AuthContext = createContext();
 
@@ -9,30 +10,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [showSetupModal, setShowSetupModal] = useState(false);
 
-  // Sync user profile with Backend database
+  // Sync user profile with Firestore
   const syncUserWithBackend = async (userData) => {
     try {
-      const res = await fetch('http://localhost:5000/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: userData.uid,
-          name: userData.name,
-          email: userData.email,
-          photoURL: userData.photoURL
-        })
-      });
-      if (res.ok) {
-        const synced = await res.json();
-        const merged = { ...userData, ...synced };
-        setUser(merged);
-        localStorage.setItem('portal_user', JSON.stringify(merged));
-      } else {
-        setUser(userData);
-        localStorage.setItem('portal_user', JSON.stringify(userData));
-      }
+      const synced = await upsertUser(userData);
+      const merged = { ...userData, ...synced };
+      setUser(merged);
+      localStorage.setItem('portal_user', JSON.stringify(merged));
     } catch (err) {
-      console.error('Backend sync failed, using client-only state:', err);
+      console.error('Firestore sync failed, using client-only state:', err);
       setUser(userData);
       localStorage.setItem('portal_user', JSON.stringify(userData));
     }
@@ -74,25 +60,18 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // Update points/info reactively by fetching user details from backend
+  // Refresh user data from Firestore
   const refreshUser = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${user.uid}/dashboard`);
-      if (res.ok) {
-        const usersRes = await fetch('http://localhost:5000/api/users/leaderboard');
-        if (usersRes.ok) {
-          const leaderboard = await usersRes.json();
-          const dbUser = leaderboard.find(u => u.uid === user.uid);
-          if (dbUser) {
-            const updated = { ...user, points: dbUser.points, role: dbUser.role };
-            setUser(updated);
-            localStorage.setItem('portal_user', JSON.stringify(updated));
-          }
-        }
+      const dbUser = await getUser(user.uid);
+      if (dbUser) {
+        const updated = { ...user, points: dbUser.points || 0, role: dbUser.role || 'student' };
+        setUser(updated);
+        localStorage.setItem('portal_user', JSON.stringify(updated));
       }
     } catch (err) {
-      console.error('Failed to sync user details:', err);
+      console.error('Failed to refresh user details:', err);
     }
   };
 

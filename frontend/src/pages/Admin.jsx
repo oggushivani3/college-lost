@@ -1,3 +1,4 @@
+import { API_URL, BASE_URL } from '../config.js';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -23,26 +24,26 @@ export default function Admin() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const analyticsRes = await fetch('http://localhost:5000/api/admin/analytics');
+      const analyticsRes = await fetch(`${API_URL}/admin/analytics`);
       if (analyticsRes.ok) {
         const data = await analyticsRes.json();
         setAnalytics(data);
       }
 
-      const lostRes = await fetch('http://localhost:5000/api/lost-items');
+      const lostRes = await fetch(`${API_URL}/lost-items`);
       if (lostRes.ok) {
         const lostData = await lostRes.json();
         setLostItems(lostData);
       }
 
-      const foundRes = await fetch('http://localhost:5000/api/found-items');
+      const foundRes = await fetch(`${API_URL}/found-items`);
       if (foundRes.ok) {
         const foundData = await foundRes.json();
         setFoundItems(foundData);
       }
 
       // Fetch users list (can reuse leaderboard for lists)
-      const usersRes = await fetch('http://localhost:5000/api/users/leaderboard');
+      const usersRes = await fetch(`${API_URL}/users/leaderboard`);
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         setUsersList(usersData);
@@ -63,7 +64,7 @@ export default function Admin() {
   const handleDelete = async (type, id) => {
     if (!window.confirm(`Are you sure you want to delete this ${type} report?`)) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/items/${type}/${id}`, {
+      const res = await fetch(`${API_URL}/items/${type}/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {

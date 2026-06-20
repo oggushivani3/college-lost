@@ -67,6 +67,18 @@ export const upsertUser = async (req, res) => {
   }
 };
 
+export const getUserById = async (req, res) => {
+  const { uid } = req.params;
+  try {
+    const user = await db.users.findOne({ uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (error) {
+    console.error('Error in getUserById:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 export const getUserLeaderboard = async (req, res) => {
   try {
     const users = await db.users.find();
@@ -266,6 +278,22 @@ export const deleteItem = async (req, res) => {
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
     console.error('Error in deleteItem:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const updateItem = async (req, res) => {
+  const { type, id } = req.params;
+  const collection = type === 'lost' ? db.lostItems : db.foundItems;
+  
+  try {
+    const updated = await collection.updateOne({ id }, req.body);
+    if (!updated) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    res.json(updated);
+  } catch (error) {
+    console.error('Error in updateItem:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };

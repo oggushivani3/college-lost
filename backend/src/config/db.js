@@ -1,14 +1,15 @@
+// MongoDB (Mongoose) data layer with JSON fallback for College Lost & Found
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Note: dotenv is loaded by index.js before this module is imported
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.join(__dirname, '../../data');
-
-// Ensure data folder exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -28,24 +29,21 @@ const writeJsonFile = (filename, data) => {
   fs.writeFileSync(getJsonFilePath(filename), JSON.stringify(data, null, 2), 'utf8');
 };
 
-// Check if MONGODB_URI is provided
-const isMongoConfigured = !!process.env.MONGODB_URI;
-
-// Initialize MongoDB Connection
 export const connectDB = async () => {
-  if (isMongoConfigured) {
+  const mongoUri = process.env.MONGODB_URI;
+  if (mongoUri) {
     try {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('MongoDB Connected successfully.');
+      await mongoose.connect(mongoUri);
+      console.log('✅ MongoDB Connected successfully.');
     } catch (error) {
-      console.error('MongoDB Connection failed. Falling back to local JSON database.', error);
+      console.error('❌ MongoDB Connection failed. Falling back to local JSON database.', error);
     }
   } else {
-    console.log('Using local JSON file-based database (MONGODB_URI missing).');
+    console.log('⚠️  Using local JSON file-based database (MONGODB_URI missing).');
   }
 };
 
-// MONGODB SCHEMAS
+// Mongoose Schemas
 const UserSchema = new mongoose.Schema({
   uid: { type: String, required: true, unique: true },
   name: { type: String, default: '' },
@@ -122,7 +120,7 @@ const ClaimModel = mongoose.models.Claim || mongoose.model('Claim', ClaimSchema)
 const NotificationModel = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 const CommentModel = mongoose.models.Comment || mongoose.model('Comment', CommentSchema);
 
-// ADAPTER PATTERN HELPER GENERATOR
+// Helper to generate adapter (works with MongoDB when connected, otherwise JSON files)
 const makeAdapter = (filename, Model) => {
   return {
     find: async (query = {}) => {
@@ -130,27 +128,17 @@ const makeAdapter = (filename, Model) => {
         return await Model.find(query).lean();
       } else {
         const data = readJsonFile(filename);
-        return data.filter(item => {
-          return Object.keys(query).every(key => {
-            return item[key] === query[key];
-          });
-        });
+        return data.filter(item => Object.entries(query).every(([k, v]) => item[k] === v));
       }
     },
-
     findOne: async (query = {}) => {
       if (mongoose.connection.readyState === 1) {
         return await Model.findOne(query).lean();
       } else {
         const data = readJsonFile(filename);
-        return data.find(item => {
-          return Object.keys(query).every(key => {
-            return item[key] === query[key];
-          });
-        }) || null;
+        return data.find(item => Object.entries(query).every(([k, v]) => item[k] === v)) || null;
       }
     },
-
     create: async (doc) => {
       if (mongoose.connection.readyState === 1) {
         const newDoc = new Model(doc);
@@ -163,17 +151,12 @@ const makeAdapter = (filename, Model) => {
         return doc;
       }
     },
-
     updateOne: async (query, updateFields) => {
       if (mongoose.connection.readyState === 1) {
         return await Model.findOneAndUpdate(query, { $set: updateFields }, { new: true }).lean();
       } else {
         const data = readJsonFile(filename);
-        const item = data.find(item => {
-          return Object.keys(query).every(key => {
-            return item[key] === query[key];
-          });
-        });
+        const item = data.find(i => Object.entries(query).every(([k, v]) => i[k] === v));
         if (item) {
           Object.assign(item, updateFields);
           writeJsonFile(filename, data);
@@ -182,18 +165,13 @@ const makeAdapter = (filename, Model) => {
         return null;
       }
     },
-
     deleteOne: async (query) => {
       if (mongoose.connection.readyState === 1) {
         return await Model.deleteOne(query);
       } else {
         let data = readJsonFile(filename);
         const initialLength = data.length;
-        data = data.filter(item => {
-          return !Object.keys(query).every(key => {
-            return item[key] === query[key];
-          });
-        });
+        data = data.filter(i => !Object.entries(query).every(([k, v]) => i[k] === v));
         writeJsonFile(filename, data);
         return { deletedCount: initialLength - data.length };
       }

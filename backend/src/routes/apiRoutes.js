@@ -2,6 +2,7 @@ import express from 'express';
 import { upload } from '../config/storage.js';
 import {
   upsertUser,
+  getUserById,
   getUserLeaderboard,
   getLostItems,
   getFoundItems,
@@ -10,6 +11,7 @@ import {
   createLostItem,
   createFoundItem,
   deleteItem,
+  updateItem,
   createClaim,
   respondToClaim,
   getNotifications,
@@ -32,13 +34,14 @@ router.post('/upload', upload.single('image'), (req, res) => {
   // Check if req.file.path starts with http/https to detect Cloudinary.
   const imageUrl = req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))
     ? req.file.path
-    : `/uploads/${req.file.filename}`;
+    : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ imageUrl });
 });
 
 // User routes
 router.post('/users', upsertUser);
 router.get('/users/leaderboard', getUserLeaderboard);
+router.get('/users/:uid', getUserById);
 router.get('/users/:userId/dashboard', getUserDashboardData);
 
 // Lost & Found items routes
@@ -48,6 +51,7 @@ router.get('/lost-items/:id', getLostItemById);
 router.get('/found-items/:id', getFoundItemById);
 router.post('/lost-items', createLostItem);
 router.post('/found-items', createFoundItem);
+router.put('/items/:type/:id', updateItem);
 router.delete('/items/:type/:id', deleteItem);
 router.get('/items/qr/:itemId', getItemQrCode);
 

@@ -5,6 +5,7 @@ import {
   MapPin, Calendar, Users, Heart, ArrowRight, Award, BadgeCheck
 } from 'lucide-react';
 import Avatar from '../components/Avatar';
+import { getAnalytics, getLostItems, getFoundItems, getLeaderboard } from '../firestoreService';
 
 export default function Home({ setActivePage, onSelectReportType }) {
   const [stats, setStats] = useState({
@@ -19,35 +20,28 @@ export default function Home({ setActivePage, onSelectReportType }) {
   const [successStories, setSuccessStories] = useState([]);
 
   useEffect(() => {
-    // Fetch stats
-    fetch('http://localhost:5000/api/admin/analytics')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data) setStats(data);
-      })
+    // Fetch stats from Firestore
+    getAnalytics()
+      .then(data => { if (data) setStats(data); })
       .catch(err => console.error(err));
 
     // Fetch lost items
-    fetch('http://localhost:5000/api/lost-items')
-      .then(res => res.json())
+    getLostItems()
       .then(data => setRecentLost(data.slice(0, 3)))
       .catch(err => console.error(err));
 
     // Fetch found items
-    fetch('http://localhost:5000/api/found-items')
-      .then(res => res.json())
+    getFoundItems()
       .then(data => setRecentFound(data.slice(0, 3)))
       .catch(err => console.error(err));
 
     // Fetch leaderboard
-    fetch('http://localhost:5000/api/users/leaderboard')
-      .then(res => res.json())
+    getLeaderboard()
       .then(data => setLeaderboard(data))
       .catch(err => console.error(err));
 
     // Fetch returned items for success stories
-    fetch('http://localhost:5000/api/found-items?status=Returned')
-      .then(res => res.json())
+    getFoundItems({ status: 'Returned' })
       .then(data => setSuccessStories(data.slice(0, 4)))
       .catch(err => console.error(err));
   }, []);
@@ -291,7 +285,7 @@ export default function Home({ setActivePage, onSelectReportType }) {
                 <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4 hover:scale-[1.01] transition-transform">
                   <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:5000${item.imageUrl}`} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       'No Photo'
                     )}
@@ -334,7 +328,7 @@ export default function Home({ setActivePage, onSelectReportType }) {
                 <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4 hover:scale-[1.01] transition-transform">
                   <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:5000${item.imageUrl}`} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       'No Photo'
                     )}
@@ -400,7 +394,7 @@ export default function Home({ setActivePage, onSelectReportType }) {
               <p className="text-xs text-slate-400 text-center py-6">No helpers listed yet</p>
             ) : (
               leaderboard.map((helper, idx) => (
-                <div key={helper.uid} className="flex items-center justify-between p-2 rounded-xl bg-white/30 dark:bg-slate-900/20 border border-slate-200/20 dark:border-white/5">
+                <div key={helper.uid || helper.id} className="flex items-center justify-between p-2 rounded-xl bg-white/30 dark:bg-slate-900/20 border border-slate-200/20 dark:border-white/5">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold text-slate-400 w-4">#{idx + 1}</span>
                     <Avatar 
