@@ -460,7 +460,7 @@ export default function BrowseItems({ mode = 'lost' }) {
               <div className={`${viewMode === 'grid' ? 'w-full h-48' : 'w-24 h-24 shrink-0 rounded-lg'} bg-slate-100 dark:bg-slate-800 overflow-hidden relative`}>
                 {item.imageUrl ? (
                   <img 
-                    src={item.imageUrl} 
+                    src={item.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}${item.imageUrl}` : item.imageUrl} 
                     alt={item.name} 
                     className="w-full h-full object-cover" 
                   />
@@ -572,7 +572,7 @@ export default function BrowseItems({ mode = 'lost' }) {
                       <div className="w-full h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-slate-200/50 dark:border-white/5">
                         {selectedItem.imageUrl ? (
                           <img 
-                            src={selectedItem.imageUrl} 
+                            src={selectedItem.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}${selectedItem.imageUrl}` : selectedItem.imageUrl} 
                             alt={selectedItem.name} 
                             className="w-full h-full object-cover" 
                           />

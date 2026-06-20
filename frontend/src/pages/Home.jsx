@@ -285,7 +285,7 @@ export default function Home({ setActivePage, onSelectReportType }) {
                 <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4 hover:scale-[1.01] transition-transform">
                   <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}${item.imageUrl}` : item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       'No Photo'
                     )}
@@ -328,7 +328,7 @@ export default function Home({ setActivePage, onSelectReportType }) {
                 <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4 hover:scale-[1.01] transition-transform">
                   <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}${item.imageUrl}` : item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       'No Photo'
                     )}
