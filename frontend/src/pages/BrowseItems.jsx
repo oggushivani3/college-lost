@@ -463,6 +463,7 @@ export default function BrowseItems({ mode = 'lost' }) {
                     src={item.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}${item.imageUrl}` : item.imageUrl} 
                     alt={item.name} 
                     className="w-full h-full object-cover" 
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/800x800?text=Image+Not+Found'; }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-200/50 dark:bg-slate-800/50">
@@ -575,6 +576,7 @@ export default function BrowseItems({ mode = 'lost' }) {
                             src={selectedItem.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}${selectedItem.imageUrl}` : selectedItem.imageUrl} 
                             alt={selectedItem.name} 
                             className="w-full h-full object-cover" 
+                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/800x800?text=Image+Not+Found'; }}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-200/50 dark:bg-slate-800/50">No Photo</div>

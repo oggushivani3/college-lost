@@ -206,7 +206,7 @@ export default function Dashboard() {
                     dashboardData.myLost.map(item => (
                       <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4">
                         <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
-                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
+                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/800x800?text=Image+Not+Found'; }} /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">{item.name}</h4>
@@ -239,7 +239,7 @@ export default function Dashboard() {
                     dashboardData.myFound.map(item => (
                       <div key={item.id} className="glass-panel p-4 rounded-xl border border-white/20 dark:border-white/5 flex gap-4">
                         <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
-                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} className="w-full h-full object-cover" /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
+                          {item.imageUrl ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/800x800?text=Image+Not+Found'; }} /> : <div className="text-[9px] text-slate-400 h-full flex items-center justify-center font-bold">No Photo</div>}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">{item.name}</h4>

@@ -30,11 +30,8 @@ router.post('/upload', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image file provided' });
   }
-  // Cloudinary storage returns a web URL in req.file.path, local storage returns absolute file path.
-  // Check if req.file.path starts with http/https to detect Cloudinary.
-  const imageUrl = req.file.path && (req.file.path.startsWith('http://') || req.file.path.startsWith('https://'))
-    ? req.file.path
-    : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  // Cloudinary storage directly provides the web URL in req.file.path
+  const imageUrl = req.file.path;
   res.json({ imageUrl });
 });
 
