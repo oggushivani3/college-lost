@@ -32,7 +32,7 @@
     "type": "comment",
     "message": "Sravs Oggu commented on your reported lost item \"charger\": \"hi\"",
     "relatedItemId": "lost-0b650ef8",
-    "read": false,
+    "read": true,
     "createdAt": "2026-06-19T09:09:41.962Z"
   },
   {
@@ -41,7 +41,7 @@
     "type": "comment",
     "message": "Sravs Oggu commented on your reported lost item \"charger\": \"found item\"",
     "relatedItemId": "lost-0b650ef8",
-    "read": false,
+    "read": true,
     "createdAt": "2026-06-19T09:11:02.333Z"
   }
 ]
