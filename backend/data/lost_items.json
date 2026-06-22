@@ -24,5 +24,18 @@
     "contactNumber": "9704442983",
     "status": "Lost",
     "createdAt": "2026-06-19T07:51:02.835Z"
+  },
+  {
+    "id": "lost-fed66cd9",
+    "reporterId": "test",
+    "name": "test",
+    "category": "Other",
+    "description": "test",
+    "lastSeenLocation": "Main Gate",
+    "dateLost": "2026-06-22",
+    "imageUrl": "",
+    "contactNumber": "",
+    "status": "Lost",
+    "createdAt": "2026-06-22T04:51:32.619Z"
   }
 ]

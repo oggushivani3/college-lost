@@ -1,7 +1,8 @@
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-
+import dotenv from 'dotenv';
+dotenv.config();
 // Configure Cloudinary if credentials are provided in env
 if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
   console.warn('\n⚠️ WARNING: Cloudinary credentials are missing in .env!');
