@@ -26,8 +26,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Serve uploaded images statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 // Mount API routes
 app.use('/api', apiRoutes);
