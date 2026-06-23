@@ -17,9 +17,9 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for frontend Vite dev server (usually runs on port 5173)
+// Enable CORS for frontend Vite dev server and deployed Vercel app
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:5173', 'https://college-lost.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
